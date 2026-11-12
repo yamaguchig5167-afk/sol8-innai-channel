@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>院内チャンネル 管理画面（見本）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --main:#3E4A86; --main-soft:#E7E9F3; --call:#FFE08A;
+    --ink:#1B1F2E; --sub:#4D5363; --line:#C9CED9; --bg:#E9ECF2; --paper:#FFFFFF;
+    --alert:#B42318; --alert-soft:#FBE4E1; --ok:#1F6B45;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"BIZ UDPGothic","Noto Sans JP","Yu Gothic UI",sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.6}
+  header{background:var(--main);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  header h1{font-size:20px;font-weight:700}
+  header .who{font-size:14px;opacity:.9}
+  .sample{font-size:13px;border:1px solid rgba(255,255,255,.7);border-radius:4px;padding:1px 8px;margin-left:10px;vertical-align:middle}
+  .wrap{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:24px;padding:24px;max-width:1500px;margin:0 auto;align-items:start}
+
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin-bottom:18px}
+  .panel h2{font-size:18px;margin-bottom:4px}
+  .panel .hint{font-size:14px;color:var(--sub);margin-bottom:14px}
+  label{display:block;font-weight:700;font-size:15px;margin:12px 0 6px}
+  textarea,input[type=date],input[type=text]{width:100%;font:inherit;font-size:17px;padding:12px 14px;border:1.5px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+  input,textarea{min-width:0}
+  textarea{min-height:92px;resize:vertical}
+  textarea:focus,input:focus,button:focus-visible{outline:3px solid var(--call);outline-offset:1px;border-color:var(--main)}
+  .count{font-size:13px;color:var(--sub);text-align:right;margin-top:4px}
+  .count.over{color:var(--alert);font-weight:700}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .check{display:flex;gap:10px;align-items:center;font-weight:400;margin:12px 0 0;cursor:pointer}
+  .check input{width:22px;height:22px;accent-color:var(--main)}
+  .err{color:var(--alert);font-size:14px;font-weight:700;margin-top:8px;min-height:0}
+  .btns{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+  button{font:inherit;font-size:16px;font-weight:700;min-height:48px;padding:10px 20px;border-radius:8px;border:1.5px solid var(--main);background:#fff;color:var(--main);cursor:pointer}
+  button.primary{background:var(--main);color:#fff}
+  button.danger{background:var(--alert);border-color:var(--alert);color:#fff}
+  button.danger.arm{background:#7A160F;border-color:#7A160F}
+  button:disabled{opacity:.45;cursor:not-allowed}
+
+  .now{border-left:4px solid var(--main);background:var(--main-soft);padding:10px 14px;border-radius:0 6px 6px 0;font-size:15px;margin-top:14px}
+  .now.off{border-left-color:var(--line);background:var(--bg);color:var(--sub)}
+
+  .wait{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .stepper{border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;text-align:center}
+  .stepper .k{font-size:14px;color:var(--sub)}
+  .stepper .v{font-size:30px;font-weight:700;font-variant-numeric:tabular-nums}
+  .stepper .v small{font-size:16px;margin-left:2px}
+  .stepper .b{display:flex;gap:8px;justify-content:center;margin-top:6px}
+  .stepper button{min-width:64px;padding:8px 0}
+
+  .emg{border-color:#E7B4AE}
+  .emg h2{color:var(--alert)}
+  .emg.on{background:var(--alert-soft)}
+
+  .preview{position:sticky;top:16px}
+  .screen{background:var(--ink);border-radius:10px;padding:10px}
+  .screen iframe{display:block;width:100%;aspect-ratio:16/9;border:0;border-radius:4px;background:#000}
+  .preview .cap{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:10px 2px 0;font-size:14px;color:var(--sub);flex-wrap:wrap}
+  .preview a{color:var(--main);font-weight:700}
+
+  .status{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 22px;border-radius:8px;font-size:15px;opacity:0;transition:.25s;pointer-events:none;z-index:9}
+  .status.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .log{list-style:none;font-size:14px}
+  .log li{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--bg)}
+  .log time{color:var(--sub);font-variant-numeric:tabular-nums;flex:none}
+  .ask{font-size:14px;color:var(--sub);background:var(--bg);border-radius:8px;padding:12px 14px}
+  .ask b{color:var(--ink)}
+  footer{font-size:13px;color:var(--sub);text-align:center;padding:8px 16px 32px}
+  @media (max-width:1000px){.wrap{grid-template-columns:minmax(0,1fr);padding:16px}.preview{position:static!important;order:-1}}
+  @media (max-width:560px){.row{grid-template-columns:minmax(0,1fr)}.row .check{margin-top:4px}}
+</style>
+</head>
+<body>
+<header>
+  <h1><span id="clinic">◯◯胃腸科クリニック</span>　待合室の画面<span class="sample">見本</span></h1>
+  <div class="who">受付スタッフ用</div>
+</header>
+
+<div class="wrap">
+  <div>
+    <!-- お知らせ -->
+    <section class="panel" aria-labelledby="h-notice">
+      <h2 id="h-notice">お知らせを出す</h2>
+      <p class="hint">画面の下の流れる文に入ります。「大きく表示」にすると、案内の1枚目にも出ます。</p>
+      <label for="nText">お知らせの文</label>
+      <textarea id="nText" maxlength="80" placeholder="例：本日は内視鏡の検査が混み合っています。お呼びするまで少しお待ちください。"></textarea>
+      <div class="count" id="nCount">0 / 60字</div>
+      <div class="row">
+        <div>
+          <label for="nUntil">いつまで出すか</label>
+          <input type="date" id="nUntil">
+        </div>
+        <div style="display:flex;align-items:flex-end">
+          <label class="check"><input type="checkbox" id="nBig">大きく表示</label>
+        </div>
+      </div>
+      <p class="err" id="nErr" role="alert"></p>
+      <div class="btns">
+        <button class="primary" id="nSave">画面に出す</button>
+        <button id="nClear">お知らせを消す</button>
+      </div>
+      <div class="now off" id="nNow">いま出しているお知らせはありません</div>
+    </section>
+
+    <!-- 休診 -->
+    <section class="panel" aria-labelledby="h-hol">
+      <h2 id="h-hol">休診を知らせる</h2>
+      <p class="hint">外来担当の表と、流れる文に出ます。繁体字と英語の画面には日付が自動で入ります。</p>
+      <div class="row">
+        <div><label for="hFrom">休診の初日</label><input type="date" id="hFrom"></div>
+        <div><label for="hTo">休診の最終日</label><input type="date" id="hTo"></div>
+      </div>
+      <p class="err" id="hErr" role="alert"></p>
+      <div class="btns">
+        <button class="primary" id="hSave">画面に出す</button>
+        <button id="hClear">休診の表示を消す</button>
+      </div>
+      <div class="now off" id="hNow">休診の表示はありません（年末年始の見本を表示中）</div>
+    </section>
+
+    <!-- 待ち時間 -->
+    <section class="panel" aria-labelledby="h-wait">
+      <h2 id="h-wait">待ち時間の目安</h2>
+      <p class="hint">押すとすぐ画面の右下に反映します。受付のシステムとつなぐと、自動で変わるようにできます。</p>
+      <div class="wait">
+        <div class="stepper"><div class="k">診察</div><div class="v"><span id="wExam">20</span><small>分</small></div>
+          <div class="b"><button data-w="exam" data-d="-5" aria-label="診察の待ち時間を5分減らす">−5</button><button data-w="exam" data-d="5" aria-label="診察の待ち時間を5分増やす">＋5</button></div></div>
+        <div class="stepper"><div class="k">内視鏡</div><div class="v"><span id="wEndo">35</span><small>分</small></div>
+          <div class="b"><button data-w="endo" data-d="-5" aria-label="内視鏡の待ち時間を5分減らす">−5</button><button data-w="endo" data-d="5" aria-label="内視鏡の待ち時間を5分増やす">＋5</button></div></div>
+      </div>
+    </section>
+
+    <!-- 非常時 -->
+    <section class="panel emg" id="emgPanel" aria-labelledby="h-emg">
+      <h2 id="h-emg">非常時の表示</h2>
+      <p class="hint">全部の画面が、避難の案内（日本語・繁体字・英語）に切り替わります。押し間違えを防ぐため、<b>2回押すと</b>切り替わります。</p>
+      <div class="btns">
+        <button class="danger" data-emg="quake">地震</button>
+        <button class="danger" data-emg="fire">火災</button>
+        <button id="eOff" disabled>通常の画面に戻す</button>
+      </div>
+      <p class="err" id="eMsg" role="status" style="color:var(--alert)"></p>
+    </section>
+
+    <section class="panel" aria-labelledby="h-ask">
+      <h2 id="h-ask">ソルエイトに頼むもの</h2>
+      <div class="ask">検査の流れ・前日のお食事・医師の紹介など、<b>病気や検査の説明</b>はここには書かず、ソルエイトにご依頼ください。文を作り、院長先生に確認していただいてから差し替えます。繁体字・英語への翻訳も同じです。</div>
+    </section>
+
+    <section class="panel" aria-labelledby="h-log">
+      <h2 id="h-log">最近の変更</h2>
+      <ul class="log" id="log"><li>まだ変更はありません</li></ul>
+    </section>
+  </div>
+
+  <aside class="preview" aria-label="待合室の画面のようす">
+    <div class="screen"><iframe id="screen" title="待合室の画面"></iframe></div>
+    <div class="cap">
+      <span>待合室の画面（いま映っているもの）</span>
+      <a id="openScreen" target="_blank" rel="noopener">画面を別のタブで開く</a>
+    </div>
+  </aside>
+</div>
+
+<footer>見本のため、変更はこの端末の中だけで画面に届きます。本番では院ごとのIDで入り、待合室のすべての画面に届きます。</footer>
+<div class="status" id="status" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  const KEY = 'innai-channel-demo';
+  const MAX = 60;
+  const $ = id => document.getElementById(id);
+  const q = new URLSearchParams(location.search);
+  const name = (q.get('name') || '').slice(0, 30);
+  if (name) $('clinic').textContent = name;
+
+  // 画面の見本を右に映す（同じ院名で）
+  const p = new URLSearchParams(); if (name) p.set('name', name); p.set('sec', '8');
+  const col = q.get('color'); if (col && /^[0-9a-fA-F]{6}$/.test(col)) { p.set('color', col); document.documentElement.style.setProperty('--main', '#' + col); }
+  $('screen').src = 'index.html?' + p; $('openScreen').href = 'index.html?' + p;
+
+  const pad = n => String(n).padStart(2, '0');
+  const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const today = () => ymd(new Date());
+  const jp = s => { const [y, m, d] = s.split('-').map(Number); const w = '日月火水木金土'[new Date(y, m - 1, d).getDay()]; return `${m}月${d}日（${w}）`; };
+
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
+  let S = load();
+  const bc = 'BroadcastChannel' in window ? new BroadcastChannel(KEY) : null;
+  function save(msg, focus){
+    S.log = [{ t: Date.now(), msg }, ...(S.log || [])].slice(0, 6);
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('この端末では保存できませんでした。ブラウザの設定をご確認ください。'); return; }
+    bc && bc.postMessage({ focus });
+    toast(msg); paint();
+  }
+  let st; function toast(t){ const s = $('status'); s.textContent = t; s.classList.add('show'); clearTimeout(st); st = setTimeout(() => s.classList.remove('show'), 2600); }
+
+  // お知らせ
+  const nText = $('nText');
+  const len = () => [...nText.value.trim()].length;
+  nText.addEventListener('input', () => { const n = len(); $('nCount').textContent = `${n} / ${MAX}字`; $('nCount').classList.toggle('over', n > MAX); $('nErr').textContent = ''; });
+  $('nUntil').value = today(); $('nUntil').min = today();
+  $('nSave').onclick = () => {
+    const t = nText.value.trim().replace(/\s+/g, ' ');
+    if (!t) { $('nErr').textContent = 'お知らせの文を入れてください。'; nText.focus(); return; }
+    if ([...t].length > MAX) { $('nErr').textContent = `${MAX}字までにしてください（いま${[...t].length}字）。長い案内はソルエイトにご依頼ください。`; nText.focus(); return; }
+    const until = $('nUntil').value || today();
+    if (until < today()) { $('nErr').textContent = '「いつまで」は今日以降の日にしてください。'; return; }
+    S.notice = { text: t, until, big: $('nBig').checked };
+    save(`お知らせを出しました（${jp(until)}まで）`, 'notice');
+  };
+  $('nClear').onclick = () => { if (!S.notice) return; delete S.notice; save('お知らせを消しました'); };
+
+  // 休診
+  $('hFrom').min = today(); $('hTo').min = today();
+  $('hFrom').addEventListener('change', () => { if (!$('hTo').value || $('hTo').value < $('hFrom').value) $('hTo').value = $('hFrom').value; $('hErr').textContent = ''; });
+  $('hSave').onclick = () => {
+    const f = $('hFrom').value, t = $('hTo').value;
+    if (!f || !t) { $('hErr').textContent = '休診の初日と最終日を入れてください（1日だけなら同じ日）。'; return; }
+    if (t < f) { $('hErr').textContent = '最終日は初日と同じか、あとの日にしてください。'; return; }
+    if (t < today()) { $('hErr').textContent = 'すでに終わった日は出せません。'; return; }
+    S.holiday = { from: f, to: t };
+    save(`休診を出しました（${jp(f)}${f === t ? '' : '〜' + jp(t)}）`, 'holiday');
+  };
+  $('hClear').onclick = () => { if (!S.holiday) return; delete S.holiday; save('休診の表示を消しました'); };
+
+  // 待ち時間
+  document.querySelectorAll('[data-w]').forEach(b => b.onclick = () => {
+    const w = S.wait || { exam: 20, endo: 35 };
+    const k = b.dataset.w; w[k] = Math.min(180, Math.max(0, w[k] + Number(b.dataset.d)));
+    S.wait = w; save(`待ち時間の目安を変えました（診察 ${w.exam}分・内視鏡 ${w.endo}分）`);
+  });
+
+  // 非常時（2回押しで確定）
+  let armed = null, at;
+  const label = { quake: '地震', fire: '火災' };
+  document.querySelectorAll('[data-emg]').forEach(b => b.onclick = () => {
+    const k = b.dataset.emg;
+    if (armed !== k) {
+      document.querySelectorAll('[data-emg]').forEach(x => { x.classList.remove('arm'); x.textContent = label[x.dataset.emg]; });
+      armed = k; b.classList.add('arm'); b.textContent = `もう一度押すと「${label[k]}」を表示`;
+      clearTimeout(at); at = setTimeout(() => { armed = null; b.classList.remove('arm'); b.textContent = label[k]; }, 4000);
+      return;
+    }
+    clearTimeout(at); armed = null; b.classList.remove('arm'); b.textContent = label[k];
+    S.emg = k; save(`非常時の表示（${label[k]}）に切り替えました`, 'emg');
+  });
+  $('eOff').onclick = () => { delete S.emg; save('通常の画面に戻しました'); };
+
+  // いまの状態を表示
+  function paint(){
+    S = load();
+    if (S.notice && S.notice.until < today()) delete S.notice;
+    if (S.holiday && S.holiday.to < today()) delete S.holiday;
+    const n = S.notice;
+    $('nNow').className = 'now' + (n ? '' : ' off');
+    $('nNow').textContent = n ? `表示中：「${n.text}」 ${jp(n.until)}まで${n.big ? '・大きく表示' : ''}` : 'いま出しているお知らせはありません';
+    const h = S.holiday;
+    $('hNow').className = 'now' + (h ? '' : ' off');
+    $('hNow').textContent = h ? `表示中：${jp(h.from)}${h.from === h.to ? '' : '〜' + jp(h.to)} 休診` : '休診の表示はありません（年末年始の見本を表示中）';
+    const w = S.wait || { exam: 20, endo: 35 };
+    $('wExam').textContent = w.exam; $('wEndo').textContent = w.endo;
+    $('emgPanel').classList.toggle('on', !!S.emg);
+    $('eOff').disabled = !S.emg;
+    $('eMsg').textContent = S.emg ? `いま全部の画面に「${label[S.emg]}」の避難の案内が出ています。` : '';
+    const log = $('log'); log.innerHTML = '';
+    (S.log || []).forEach(x => { const li = document.createElement('li'); const d = new Date(x.t); const tm = document.createElement('time'); tm.textContent = `${d.getMonth() + 1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`; const sp = document.createElement('span'); sp.textContent = x.msg; li.append(tm, sp); log.append(li); });
+    if (!log.children.length) log.innerHTML = '<li>まだ変更はありません</li>';
+  }
+  addEventListener('storage', e => { if (e.key === KEY) paint(); });
+  paint();
+})();
+</script>
+</body>
+</html>
