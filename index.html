@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>院内チャンネル 見本画面</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* 見本の配色：院の色に差し替える前提（?color=xxxxxx で変更可） */
+  :root{
+    --main:#3E4A86;      /* 主な色（桔梗鼠） */
+    --main-soft:#E7E9F3;
+    --call:#FFE08A;      /* 呼び出しの面。文字は墨 */
+    --ink:#1B1F2E;
+    --sub:#4D5363;
+    --line:#D5D8E0;
+    --bg:#EEF0F4;
+    --paper:#FFFFFF;
+    --alert:#B42318;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#000;overflow:hidden}
+  body{font-family:"BIZ UDPGothic","BIZ UDPゴシック","Noto Sans JP","Yu Gothic UI",sans-serif;color:var(--ink)}
+  #stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform-origin:center;background:var(--bg);display:grid;grid-template-rows:112px 1fr 92px;overflow:hidden}
+
+  /* 上の帯 */
+  header{display:flex;align-items:center;justify-content:space-between;padding:0 48px;background:var(--main);color:#fff}
+  .clinic{font-size:46px;font-weight:700;letter-spacing:.04em}
+  .sample{font-size:22px;margin-left:20px;padding:4px 12px;border:2px solid rgba(255,255,255,.7);border-radius:6px;vertical-align:middle}
+  .clock{display:flex;align-items:baseline;gap:24px}
+  .date{font-size:32px}
+  .time{font-size:56px;font-weight:700;font-variant-numeric:tabular-nums}
+
+  /* 中央 */
+  main{display:grid;grid-template-columns:1fr 560px;gap:28px;padding:28px 40px 24px;min-height:0}
+  #slides{position:relative;background:var(--paper);border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+  .slide{position:absolute;inset:0;padding:52px 64px 84px;opacity:0;transition:opacity .8s;display:flex;flex-direction:column}
+  .slide .body{flex:1;display:flex;flex-direction:column;justify-content:center}
+  .slide.on{opacity:1}
+  .slide h2{font-size:64px;line-height:1.25;color:var(--main);margin-bottom:12px}
+  .slide .lead{font-size:32px;color:var(--sub)}
+  .note{position:absolute;left:64px;bottom:28px;font-size:22px;color:var(--sub)}
+  #bar{position:absolute;left:0;bottom:0;height:8px;background:var(--main);width:0}
+
+  /* 流れ（横に6段） */
+  .flow{display:flex;align-items:stretch;gap:0;margin-top:20px}
+  .step{flex:1;text-align:center;position:relative;padding:0 6px}
+  .step .n{width:132px;height:132px;margin:0 auto 26px;border-radius:50%;background:var(--main-soft);color:var(--main);font-size:64px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .step .t{font-size:38px;font-weight:700;line-height:1.35}
+  .step:not(:last-child)::after{content:"";position:absolute;top:62px;right:-14px;width:28px;height:8px;background:var(--line)}
+  .step.now .n{background:var(--main);color:#fff}
+
+  /* 箇条（大きい文字で4つまで） */
+  .rows{list-style:none;display:grid;gap:10px}
+  .rows li{display:grid;grid-template-columns:96px 1fr;align-items:center;font-size:48px;line-height:1.35;padding:26px 0;border-bottom:2px solid var(--bg)}
+  .rows .ic{width:72px;height:72px;border-radius:12px;background:var(--main-soft);display:flex;align-items:center;justify-content:center}
+  .rows .ic svg{width:44px;height:44px;stroke:var(--main);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+  .rows li.no .ic{background:#FBE4E1}
+  .rows li.no .ic svg{stroke:var(--alert)}
+  .rows b{color:var(--alert)}
+
+  /* 外来担当表 */
+  table{border-collapse:collapse;width:100%;font-size:42px}
+  th,td{border-bottom:2px solid var(--bg);padding:24px 10px;text-align:center}
+  th{color:var(--sub);font-weight:400;font-size:32px}
+  td:first-child,th:first-child{text-align:left;color:var(--sub);font-size:32px}
+  .holiday{margin-top:44px;font-size:42px;padding:26px 32px;background:var(--main-soft);border-radius:12px}
+  .holiday b{color:var(--main)}
+
+  #stage.en .rows li{font-size:42px;padding:20px 0}
+  #stage.en table{font-size:32px}
+  #stage.en th,#stage.en td:first-child{font-size:28px}
+  /* 右：呼び出し */
+  aside{display:grid;grid-template-rows:minmax(0,1fr) minmax(0,1fr) auto;gap:20px;min-height:0}
+  .call{background:var(--call);border-radius:14px;padding:22px 34px;min-height:0;display:flex;flex-direction:column;justify-content:space-between}
+  .call .room{font-size:38px;font-weight:700;margin-bottom:4px}
+  .call .go{font-size:26px;white-space:nowrap}
+  .call .num{font-size:150px;line-height:.95;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+  .call .next{font-size:28px;text-align:right}
+  .call.flash{animation:flash 1.6s ease-out 2}
+  @keyframes flash{0%{box-shadow:0 0 0 0 rgba(27,31,46,.55)}100%{box-shadow:0 0 0 28px rgba(27,31,46,0)}}
+  .wait{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 30px;font-size:28px;line-height:1.45}
+  .wait .w{display:flex;justify-content:space-between;align-items:baseline}
+  .wait b{font-size:40px;color:var(--main);white-space:nowrap;margin-left:16px}
+
+  /* 下の帯：テロップ */
+  footer{background:var(--ink);color:#fff;display:flex;align-items:center;overflow:hidden;position:relative}
+  footer .label{flex:none;height:100%;display:flex;align-items:center;padding:0 30px;background:var(--call);color:var(--ink);font-size:30px;font-weight:700;z-index:1}
+  .track{white-space:nowrap;font-size:36px;padding-left:100%;animation:ticker 48s linear infinite}
+  @keyframes ticker{to{transform:translateX(-100%)}}
+
+  /* 非常時 */
+  #emergency{position:absolute;inset:0;background:var(--alert);color:#fff;display:none;flex-direction:column;justify-content:center;padding:0 120px;gap:44px;z-index:5}
+  #emergency.on{display:flex}
+  #emergency .big{font-size:96px;font-weight:700;line-height:1.25}
+  #emergency .ln{font-size:46px;line-height:1.4;border-top:2px solid rgba(255,255,255,.5);padding-top:24px}
+  #emergency .ln small{display:block;font-size:30px;opacity:.9;margin-top:8px}
+
+  /* 操作パネル（触れたときだけ出る・端末の操作用） */
+  #ctrl{position:fixed;right:16px;bottom:16px;display:flex;gap:8px;opacity:0;transition:opacity .3s;z-index:10}
+  #ctrl.show{opacity:1}
+  #ctrl button{font:inherit;font-size:15px;padding:10px 14px;border-radius:8px;border:1px solid #888;background:#fff;color:var(--ink);cursor:pointer;min-height:44px}
+  #ctrl button.danger{background:var(--alert);color:#fff;border-color:var(--alert)}
+  @media (prefers-reduced-motion: reduce){.track{animation-duration:120s}.call.flash{animation:none}.slide{transition:none}}
+</style>
+</head>
+<body>
+<div id="stage">
+  <header>
+    <div><span class="clinic" id="clinicName">◯◯胃腸科クリニック</span><span class="sample">見本画面</span></div>
+    <div class="clock"><span class="date" id="date"></span><span class="time" id="time"></span></div>
+  </header>
+
+  <main>
+    <section id="slides" aria-live="polite"><div id="bar"></div></section>
+    <aside>
+      <div class="call" id="callExam">
+        <div><div class="room" data-t="roomExam"></div><div class="go" data-t="go"></div></div>
+        <div><div class="num" id="numExam">12</div><div class="next" id="nextExam"></div></div>
+      </div>
+      <div class="call" id="callEndo">
+        <div><div class="room" data-t="roomEndo"></div><div class="go" data-t="go"></div></div>
+        <div><div class="num" id="numEndo">5</div><div class="next" id="nextEndo"></div></div>
+      </div>
+      <div class="wait" id="wait"></div>
+    </aside>
+  </main>
+
+  <footer><div class="label" data-t="news"></div><div class="track" id="ticker"></div></footer>
+
+  <div id="emergency" role="alert">
+    <div class="big">地震が発生しました。<br>その場で頭を守ってください。</div>
+    <div class="ln">スタッフの指示があるまで、外へ出ないでください。<small>發生地震。請留在原地保護頭部，並依照工作人員指示行動。</small><small>An earthquake has occurred. Protect your head, stay where you are, and follow staff instructions.</small></div>
+  </div>
+</div>
+
+<div id="ctrl">
+  <button id="bLang">言語を切り替え</button>
+  <button id="bNext">番号を進める</button>
+  <button id="bSlide">次の案内</button>
+  <button id="bEmg" class="danger">非常時の表示</button>
+  <button id="bFull">全画面</button>
+</div>
+
+<script>
+(() => {
+  const q = new URLSearchParams(location.search);
+  const name = q.get('name');
+  if (name) document.getElementById('clinicName').textContent = name;
+  const col = q.get('color');
+  if (col && /^[0-9a-fA-F]{6}$/.test(col)) document.documentElement.style.setProperty('--main', '#' + col);
+
+  // 画面の大きさに合わせて 1920×1080 を拡大縮小
+  const stage = document.getElementById('stage');
+  const fit = () => { const s = Math.min(innerWidth / 1920, innerHeight / 1080); stage.style.transform = `translate(-50%,-50%) scale(${s})`; };
+  addEventListener('resize', fit); fit();
+
+  const I = {
+    ok:'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    no:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    cup:'<svg viewBox="0 0 24 24"><path d="M5 8h12v6a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z"/><path d="M17 10h1.5a2.5 2.5 0 0 1 0 5H17"/></svg>',
+    pill:'<svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="7" rx="3.5"/><path d="M12 8.5v7"/></svg>',
+    car:'<svg viewBox="0 0 24 24"><path d="M4 16v-4l2-5h12l2 5v4z"/><circle cx="8" cy="16.5" r="1.6"/><circle cx="16" cy="16.5" r="1.6"/></svg>',
+    bus:'<svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="14" rx="2"/><path d="M5 11h14M8 20.5v-3M16 20.5v-3"/></svg>',
+    pen:'<svg viewBox="0 0 24 24"><path d="M4 20l4-1 11-11-3-3L5 16z"/></svg>',
+    cal:'<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>',
+    qr:'<svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h2v2M18 18h2M14 20h2M20 14v2"/></svg>',
+    phone:'<svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/></svg>',
+    help:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg>',
+    wifi:'<svg viewBox="0 0 24 24"><path d="M3 9.5a13 13 0 0 1 18 0M6 13a8.5 8.5 0 0 1 12 0M9 16.5a4 4 0 0 1 6 0"/><circle cx="12" cy="19.5" r=".8"/></svg>'
+  };
+  const row = (ic, html, no) => `<li class="${no ? 'no' : ''}"><span class="ic">${I[ic]}</span><span>${html}</span></li>`;
+
+  // 文言（日本語・繁體中文・English）。医療の案内は見本の文で、院長の確認後に差し替える前提
+  const T = {
+    ja:{ roomExam:'診察室', roomEndo:'内視鏡室', go:'番号の方は お入りください', next:n=>`次は ${n} 番`, news:'お知らせ',
+      wait:'待ち時間の目安<div class="w">診察<b>約20分</b></div><div class="w">内視鏡<b>約35分</b></div>',
+      ticker:'本日は混み合っています。順番が近づいた方からお呼びします。　／　お車の方は受付で駐車券をお出しください。　／　年末年始は 12月29日〜1月3日 を休診とします。　／　ご気分が悪い方は、近くのスタッフへお声がけください。',
+      note:'※見本の文です。検査の準備は、院からの説明が優先です。',
+      slides:[
+        {h:'本日の内視鏡検査の流れ', lead:'いま、どこまで進んでいるかの目安です。', flow:['受付','お着替え','のどの麻酔<br>鎮静','検査','回復室で<br>休憩','結果の<br>ご説明']},
+        {h:'検査の前日のお食事', lead:'検査をきれいに行うためのお願いです。', rows:[['ok','夕食は消化のよいものを、早めの時間に'],['no','当日の朝は、<b>お食事をとらないでください</b>',1],['cup','お水・お茶は飲めます'],['pill','お薬は、事前にお伝えしたとおりに']]},
+        {h:'鎮静剤を使った日は', lead:'眠くなるお薬のため、ご本人の安全のためのお願いです。', rows:[['car','車・バイク・自転車の<b>運転はできません</b>',1],['bus','ご家族の送り迎えか、バス・タクシーで'],['pen','大切な判断やご契約は、翌日以降に']]},
+        {h:'次回のご予約', lead:'次に来ていただく日は、院からお伝えします。', rows:[['cal','次回のお日にちは、受付でお決めします'],['qr','QRコードつきの予約票をお渡しします'],['phone','スマホで予約日を確かめられます']]},
+        {h:'今週の外来担当', table:{head:['','月','火','水','木','金','土'],rows:[['午前','院長','副院長','院長','副院長','院長','交代'],['午後','副院長','院長','休診','院長','副院長','休診']]}, holiday:'年末年始の休診　<b>12月29日（火）〜 1月3日（日）</b>'},
+        {h:'待合室でのお願い', lead:'みなさまが気持ちよく過ごせるように。', rows:[['phone','お電話は、待合室の外でお願いします'],['help','ご気分が悪くなったら、すぐスタッフへ'],['wifi','無料Wi-Fi　Clinic-Guest（見本）']]}
+      ]},
+    zh:{ roomExam:'診間', roomEndo:'內視鏡室', go:'叫到號碼的患者請進入', next:n=>`下一位 ${n} 號`, news:'公告',
+      wait:'預估等候時間<div class="w">看診<b>約20分鐘</b></div><div class="w">內視鏡<b>約35分鐘</b></div>',
+      ticker:'今日人潮較多，將依序叫號。　／　開車前來的患者，請於櫃檯出示停車券。　／　12月29日至1月3日年終休診。　／　身體不適時，請告知附近的工作人員。',
+      note:'※此為範例文字。檢查前的準備，請以本院說明為準。',
+      slides:[
+        {h:'今日內視鏡檢查流程', lead:'目前進行到哪一步的參考。', flow:['報到','更衣','喉嚨麻醉<br>鎮靜','檢查','恢復室<br>休息','說明<br>結果']},
+        {h:'檢查前一天的飲食', lead:'為了順利完成檢查，請您配合。', rows:[['ok','晚餐請選擇好消化的食物，並提早用餐'],['no','檢查當天早上<b>請勿進食</b>',1],['cup','可以喝水或茶'],['pill','服藥請依照事前指示']]},
+        {h:'使用鎮靜劑的當天', lead:'鎮靜劑會使人想睡，為了您的安全請配合。', rows:[['car','<b>請勿駕駛</b>汽車、機車或騎自行車',1],['bus','請由家人接送，或搭乘公車、計程車'],['pen','重要決定或簽約請延至隔天以後']]},
+        {h:'下次預約', lead:'下次回診日期由本院通知您。', rows:[['cal','下次日期將於櫃檯為您決定'],['qr','櫃檯會交給您附QR碼的預約單'],['phone','可用手機確認預約日期']]},
+        {h:'本週門診醫師', table:{head:['','一','二','三','四','五','六'],rows:[['上午','院長','副院長','院長','副院長','院長','輪班'],['下午','副院長','院長','休診','院長','副院長','休診']]}, holiday:'年終休診　<b>12月29日（二）〜 1月3日（日）</b>'},
+        {h:'候診室須知', lead:'讓大家都能安心等候。', rows:[['phone','講電話請至候診室外'],['help','身體不適請立即告知工作人員'],['wifi','免費Wi-Fi　Clinic-Guest（範例）']]}
+      ]},
+    en:{ roomExam:'Consultation', roomEndo:'Endoscopy', go:'Please come in', next:n=>`Next: No. ${n}`, news:'Notice',
+      wait:'Estimated wait (approx.)<div class="w">Doctor<b>20 min</b></div><div class="w">Endoscopy<b>35 min</b></div>',
+      ticker:'We are busy today. We will call you in order.　/　If you came by car, please show your parking ticket at reception.　/　Closed from Dec 29 to Jan 3.　/　If you feel unwell, please tell a staff member.',
+      note:'* Sample text. Please follow the instructions given by the clinic.',
+      slides:[
+        {h:'Your endoscopy today', lead:'A guide to where you are in the process.', flow:['Reception','Change','Throat spray<br>Sedation','Exam','Rest','Results']},
+        {h:'The day before your exam', lead:'Please help us get clear results.', rows:[['ok','A light, easy-to-digest dinner, early'],['no','<b>No food</b> on the morning of the exam',1],['cup','Water and tea are fine'],['pill','Take medicine as instructed']]},
+        {h:'If you receive sedation', lead:'The medicine makes you sleepy. For your safety:', rows:[['car','<b>Do not drive</b> a car, motorbike or bicycle',1],['bus','Get a ride home, or take a bus or taxi'],['pen','Leave important decisions until tomorrow']]},
+        {h:'Your next appointment', lead:'The clinic will set the date of your next visit.', rows:[['cal','We will set the date at reception'],['qr','You will receive a slip with a QR code'],['phone','Check the date on your phone']]},
+        {h:'Doctors this week', table:{head:['','Mon','Tue','Wed','Thu','Fri','Sat'],rows:[['AM','Director','Deputy','Director','Deputy','Director','Rotating'],['PM','Deputy','Director','Closed','Director','Deputy','Closed']]}, holiday:'Closed　<b>Dec 29 (Tue) – Jan 3 (Sun)</b>'},
+        {h:'In the waiting room', lead:'So that everyone can wait comfortably.', rows:[['phone','Please take calls outside the waiting room'],['help','Tell staff right away if you feel unwell'],['wifi','Free Wi-Fi: Clinic-Guest (sample)']]}
+      ]}
+  };
+
+  // 言語の回り方：日本語 → 繁體中文 → 日本語 → English
+  const ORDER = ['ja','zh','ja','en'];
+  let li = 0, lang = 'ja', si = 0, flowStep = 3;
+  const SLIDE_MS = 12000;
+  const box = document.getElementById('slides');
+  const bar = document.getElementById('bar');
+
+  function render(){
+    const L = T[lang];
+    document.documentElement.lang = lang === 'zh' ? 'zh-Hant-TW' : lang;
+    stage.classList.toggle('en', lang === 'en');
+    document.querySelectorAll('[data-t]').forEach(e => e.textContent = L[e.dataset.t]);
+    document.getElementById('wait').innerHTML = L.wait;
+    document.getElementById('ticker').textContent = L.ticker;
+    updNext();
+    box.querySelectorAll('.slide').forEach(e => e.remove());
+    L.slides.forEach((s, i) => {
+      const d = document.createElement('div');
+      d.className = 'slide' + (i === si ? ' on' : '');
+      let h = `<h2>${s.h}</h2>` + (s.lead ? `<p class="lead">${s.lead}</p>` : '') + '<div class="body">';
+      if (s.flow) h += '<div class="flow">' + s.flow.map((t, k) => `<div class="step${k === flowStep ? ' now' : ''}"><div class="n">${k + 1}</div><div class="t">${t}</div></div>`).join('') + '</div>';
+      if (s.rows) h += '<ul class="rows">' + s.rows.map(r => row(r[0], r[1], r[2])).join('') + '</ul>';
+      if (s.table) h += '<table><tr>' + s.table.head.map(x => `<th>${x}</th>`).join('') + '</tr>' + s.table.rows.map(r => '<tr>' + r.map(x => `<td>${x}</td>`).join('') + '</tr>').join('') + '</table>';
+      if (s.holiday) h += `<p class="holiday">${s.holiday}</p>`;
+      h += '</div>';
+      if (i < 3) h += `<p class="note">${L.note}</p>`;
+      d.innerHTML = h;
+      box.insertBefore(d, bar);
+    });
+  }
+
+  let timer;
+  function startBar(){
+    bar.style.transition = 'none'; bar.style.width = '0';
+    requestAnimationFrame(() => requestAnimationFrame(() => { bar.style.transition = `width ${SLIDE_MS}ms linear`; bar.style.width = '100%'; }));
+  }
+  function show(){
+    box.querySelectorAll('.slide').forEach((e, i) => e.classList.toggle('on', i === si));
+    startBar();
+    clearTimeout(timer); timer = setTimeout(nextSlide, SLIDE_MS);
+  }
+  function nextSlide(){
+    si++;
+    if (si >= T[lang].slides.length){ si = 0; li = (li + 1) % ORDER.length; lang = ORDER[li]; render(); }
+    show();
+  }
+
+  // 呼び出し番号（見本：一定時間ごとに進む）
+  const nums = { Exam: 12, Endo: 5 };
+  function updNext(){
+    const L = T[lang];
+    document.getElementById('nextExam').textContent = L.next(nums.Exam + 1);
+    document.getElementById('nextEndo').textContent = L.next(nums.Endo + 1);
+  }
+  function advance(k){
+    nums[k]++;
+    document.getElementById('num' + k).textContent = nums[k];
+    updNext();
+    const c = document.getElementById('call' + k);
+    c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
+    if (k === 'Endo') { flowStep = (flowStep + 1) % 6; render(); show(); }
+  }
+  setInterval(() => advance('Exam'), 45000);
+  setInterval(() => advance('Endo'), 70000);
+
+  // 時計
+  function tick(){
+    const d = new Date(), w = '日月火水木金土'[d.getDay()];
+    document.getElementById('date').textContent = `${d.getMonth() + 1}月${d.getDate()}日（${w}）`;
+    document.getElementById('time').textContent = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+  tick(); setInterval(tick, 10000);
+
+  // 操作（画面に触れる・マウスを動かすと4秒だけ出る）
+  const ctrl = document.getElementById('ctrl'); let ht;
+  const reveal = () => { ctrl.classList.add('show'); clearTimeout(ht); ht = setTimeout(() => ctrl.classList.remove('show'), 4000); };
+  addEventListener('pointermove', reveal); addEventListener('pointerdown', reveal);
+  const emg = document.getElementById('emergency');
+  const toggleEmg = () => emg.classList.toggle('on');
+  const nextLang = () => { li = (li + 1) % ORDER.length; lang = ORDER[li]; render(); show(); };
+  document.getElementById('bLang').onclick = nextLang;
+  document.getElementById('bNext').onclick = () => advance('Exam');
+  document.getElementById('bSlide').onclick = nextSlide;
+  document.getElementById('bEmg').onclick = toggleEmg;
+  document.getElementById('bFull').onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
+  addEventListener('keydown', e => {
+    if (e.key === 'e' || e.key === 'E') toggleEmg();
+    else if (e.key === 'n' || e.key === 'N') advance('Exam');
+    else if (e.key === 'l' || e.key === 'L') nextLang();
+    else if (e.key === 'ArrowRight') nextSlide();
+    else if (e.key === 'f' || e.key === 'F') document.getElementById('bFull').click();
+  });
+
+  render(); show();
+})();
+</script>
+</body>
+</html>
