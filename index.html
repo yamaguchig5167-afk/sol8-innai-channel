@@ -220,7 +220,7 @@
   // 言語の回り方：日本語 → 繁體中文 → 日本語 → English
   const ORDER = ['ja','zh','ja','en'];
   let li = 0, lang = 'ja', si = 0, flowStep = 3;
-  const SLIDE_MS = 12000;
+  const SLIDE_MS = Math.max(4, Number(q.get('sec')) || 12) * 1000; // ?sec= で1枚の表示秒数を変更
   const box = document.getElementById('slides');
   const bar = document.getElementById('bar');
 
