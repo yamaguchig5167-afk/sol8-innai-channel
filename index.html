@@ -73,6 +73,12 @@
   .holiday{margin-top:30px;font-size:42px;padding:26px 32px;background:var(--main-soft);border-radius:12px}
   .holiday b{color:var(--main)}
 
+  /* 院が管理画面から出したお知らせ（大きく表示） */
+  .slide.notice{justify-content:center}
+  .slide.notice .tagline{display:inline-block;align-self:flex-start;font-size:30px;font-weight:700;background:var(--call);padding:6px 20px;border-radius:8px;margin-bottom:28px}
+  .slide.notice .msg{font-size:64px;line-height:1.5;font-weight:700;color:var(--ink);max-width:1200px}
+  .slide.notice .until{font-size:30px;color:var(--sub);margin-top:30px}
+
   #stage.en .rows li{font-size:30px;padding:18px 0;white-space:normal}
   #stage.en table{font-size:32px}
   #stage.en th,#stage.en td:first-child{font-size:28px}
@@ -224,17 +230,75 @@
   const box = document.getElementById('slides');
   const bar = document.getElementById('bar');
 
+  // ── 管理画面（admin.html）から届く内容：お知らせ・休診・待ち時間・非常時 ──
+  // 見本ではこの端末のブラウザに保存し、同じ端末の画面へ即時に届ける（本番は配信サーバー経由）
+  const KEY = 'innai-channel-demo';
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  const pad = n => String(n).padStart(2, '0');
+  const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
+  let S = load();
+  const fmtDay = (s, lg) => {
+    const [y, m, d] = s.split('-').map(Number), wd = new Date(y, m - 1, d).getDay();
+    if (lg === 'en') return `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1]} ${d} (${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][wd]})`;
+    return `${m}月${d}日（${(lg === 'zh' ? '日一二三四五六' : '日月火水木金土')[wd]}）`;
+  };
+  const range = (h, lg) => h.from === h.to ? fmtDay(h.from, lg) : `${fmtDay(h.from, lg)}${lg === 'en' ? ' – ' : '〜'}${fmtDay(h.to, lg)}`;
+  const HOL = {
+    ja: h => ({ line: `臨時休診　<b>${range(h, 'ja')}</b>`, tick: `${range(h, 'ja')} は休診します。` }),
+    zh: h => ({ line: `臨時休診　<b>${range(h, 'zh')}</b>`, tick: `${range(h, 'zh')}休診。` }),
+    en: h => ({ line: `Closed　<b>${range(h, 'en')}</b>`, tick: `Closed: ${range(h, 'en')}.` })
+  };
+  const WAIT = {
+    ja: w => `待ち時間の目安<div class="w">診察<b>約${w.exam}分</b></div><div class="w">内視鏡<b>約${w.endo}分</b></div>`,
+    zh: w => `預估等候時間<div class="w">看診<b>約${w.exam}分鐘</b></div><div class="w">內視鏡<b>約${w.endo}分鐘</b></div>`,
+    en: w => `Estimated wait (approx.)<div class="w">Doctor<b>${w.exam} min</b></div><div class="w">Endoscopy<b>${w.endo} min</b></div>`
+  };
+  const NOTICE = { ja: ['お知らせ', d => d ? `${d} まで` : '本日のお知らせです'], zh: ['公告', d => d ? `至 ${d}` : '本日公告'], en: ['Notice', d => d ? `Until ${d}` : 'Today only'] };
+  const EMG = {
+    quake: { big: '地震が発生しました。<br>その場で頭を守ってください。', ln: 'スタッフの指示があるまで、外へ出ないでください。', zh: '發生地震。請留在原地保護頭部，並依照工作人員指示行動。', en: 'An earthquake has occurred. Protect your head, stay where you are, and follow staff instructions.' },
+    fire:  { big: '火災が発生しました。<br>スタッフの案内で避難してください。', ln: 'エレベーターは使わないでください。姿勢を低くして進んでください。', zh: '發生火災。請依照工作人員引導避難，勿搭乘電梯。', en: 'A fire has broken out. Follow staff to evacuate. Do not use the elevator.' }
+  };
+  const live = () => {
+    const t = todayStr();
+    return {
+      notice: S.notice && S.notice.until >= t ? S.notice : null,
+      holiday: S.holiday && S.holiday.to >= t ? S.holiday : null,
+      wait: S.wait || { exam: 20, endo: 35 }
+    };
+  };
+  let cur = [];
+  function buildSlides(L){
+    const v = live();
+    const arr = L.slides.map((s, k) => Object.assign({}, s, { _k: k }, (s.holiday && v.holiday) ? { holiday: HOL[lang](v.holiday).line } : {}));
+    if (v.notice && v.notice.big) arr.unshift({ notice: v.notice });
+    return arr;
+  }
+
   function render(){
     const L = T[lang];
+    const v = live();
     document.documentElement.lang = lang === 'zh' ? 'zh-Hant-TW' : lang;
     stage.classList.toggle('en', lang === 'en');
     document.querySelectorAll('[data-t]').forEach(e => e.textContent = L[e.dataset.t]);
-    document.getElementById('wait').innerHTML = L.wait;
-    document.getElementById('ticker').textContent = L.ticker;
+    document.getElementById('wait').innerHTML = WAIT[lang](v.wait);
+    let tk = L.ticker;
+    if (v.holiday) tk = HOL[lang](v.holiday).tick + '　／　' + tk;
+    if (v.notice) tk = v.notice.text + '　／　' + tk;
+    document.getElementById('ticker').textContent = tk;
     updNext();
     box.querySelectorAll('.slide').forEach(e => e.remove());
-    L.slides.forEach((s, i) => {
+    cur = buildSlides(L);
+    if (si >= cur.length) si = 0;
+    cur.forEach((s, i) => {
       const d = document.createElement('div');
+      if (s.notice) {
+        const N = NOTICE[lang];
+        d.className = 'slide notice' + (i === si ? ' on' : '');
+        d.innerHTML = `<span class="tagline">${N[0]}</span><p class="msg">${esc(s.notice.text)}</p><p class="until">${N[1](s.notice.until === todayStr() ? '' : fmtDay(s.notice.until, lang))}</p>`;
+        box.insertBefore(d, bar);
+        return;
+      }
       const split = !!s.rows;
       d.className = 'slide' + (split ? ' split' : '') + (i === si ? ' on' : '');
       const art = s.img ? `<img class="art" src="img/${s.img}.jpg" alt="">` : '';
@@ -246,7 +310,7 @@
       if (s.holiday) h += `<p class="holiday">${s.holiday}</p>`;
       h += '</div>';
       if (split) h += '</div>' + art;
-      if (i < 3) h += `<p class="note">${L.note}</p>`;
+      if (s._k < 3) h += `<p class="note">${L.note}</p>`;
       d.innerHTML = h;
       box.insertBefore(d, bar);
     });
@@ -264,7 +328,7 @@
   }
   function nextSlide(){
     si++;
-    if (si >= T[lang].slides.length){ si = 0; li = (li + 1) % ORDER.length; lang = ORDER[li]; render(); }
+    if (si >= cur.length){ si = 0; li = (li + 1) % ORDER.length; lang = ORDER[li]; render(); }
     show();
   }
 
@@ -299,7 +363,28 @@
   const reveal = () => { ctrl.classList.add('show'); clearTimeout(ht); ht = setTimeout(() => ctrl.classList.remove('show'), 4000); };
   addEventListener('pointermove', reveal); addEventListener('pointerdown', reveal);
   const emg = document.getElementById('emergency');
-  const toggleEmg = () => emg.classList.toggle('on');
+  const setEmg = k => {
+    const E = EMG[k] || EMG.quake;
+    emg.innerHTML = `<div class="big">${E.big}</div><div class="ln">${E.ln}<small>${E.zh}</small><small>${E.en}</small></div>`;
+  };
+  const toggleEmg = () => { if (!emg.classList.contains('on')) setEmg(S.emg || 'quake'); emg.classList.toggle('on'); };
+
+  // 管理画面からの更新を受け取る（同じ端末の別タブ・埋め込みの両方）
+  let lastEmg = S.emg || null;
+  function onUpdate(m){
+    S = load();
+    const e = S.emg || null;
+    if (e !== lastEmg) { if (e) { setEmg(e); emg.classList.add('on'); } else emg.classList.remove('on'); lastEmg = e; }
+    if (m && (m.focus === 'notice' || m.focus === 'holiday')) {
+      if (m.focus === 'notice' && live().notice && live().notice.big) si = 0;
+      else if (m.focus === 'holiday') si = T[lang].slides.findIndex(s => s.holiday) + (live().notice && live().notice.big ? 1 : 0);
+      render(); show();
+    } else render();
+  }
+  if ('BroadcastChannel' in window) new BroadcastChannel(KEY).onmessage = e => onUpdate(e.data);
+  addEventListener('storage', e => { if (e.key === KEY) onUpdate(null); });
+  setInterval(() => { S = load(); render(); }, 5 * 60 * 1000); // 期限切れのお知らせ・休診を外す
+  if (S.emg) { setEmg(S.emg); emg.classList.add('on'); }
   const nextLang = () => { li = (li + 1) % ORDER.length; lang = ORDER[li]; render(); show(); };
   document.getElementById('bLang').onclick = nextLang;
   document.getElementById('bNext').onclick = () => advance('Exam');
