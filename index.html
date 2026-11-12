@@ -33,10 +33,15 @@
   .time{font-size:56px;font-weight:700;font-variant-numeric:tabular-nums}
 
   /* 中央 */
-  main{display:grid;grid-template-columns:1fr 560px;gap:28px;padding:28px 40px 24px;min-height:0}
+  main{display:grid;grid-template-columns:1fr 480px;gap:28px;padding:28px 40px 24px;min-height:0}
   #slides{position:relative;background:var(--paper);border-radius:14px;overflow:hidden;border:1px solid var(--line)}
   .slide{position:absolute;inset:0;padding:52px 64px 84px;opacity:0;transition:opacity .8s;display:flex;flex-direction:column}
   .slide .body{flex:1;display:flex;flex-direction:column;justify-content:center}
+  .slide.split{display:grid;grid-template-columns:1fr 400px;gap:36px;align-items:center}
+  .slide.split .col{display:flex;flex-direction:column;height:100%}
+  .slide .art{width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:14px;background:var(--bg)}
+  .slide .top{display:grid;grid-template-columns:1fr 450px;gap:36px;align-items:start}
+  .slide .top .art{width:450px}
   .slide.on{opacity:1}
   .slide h2{font-size:64px;line-height:1.25;color:var(--main);margin-bottom:12px}
   .slide .lead{font-size:32px;color:var(--sub)}
@@ -53,7 +58,7 @@
 
   /* 箇条（大きい文字で4つまで） */
   .rows{list-style:none;display:grid;gap:10px}
-  .rows li{display:grid;grid-template-columns:96px 1fr;align-items:center;font-size:48px;line-height:1.35;padding:26px 0;border-bottom:2px solid var(--bg)}
+  .rows li{display:grid;grid-template-columns:88px 1fr;align-items:center;font-size:40px;line-height:1.35;padding:22px 0;white-space:nowrap;border-bottom:2px solid var(--bg)}
   .rows .ic{width:72px;height:72px;border-radius:12px;background:var(--main-soft);display:flex;align-items:center;justify-content:center}
   .rows .ic svg{width:44px;height:44px;stroke:var(--main);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
   .rows li.no .ic{background:#FBE4E1}
@@ -61,14 +66,14 @@
   .rows b{color:var(--alert)}
 
   /* 外来担当表 */
-  table{border-collapse:collapse;width:100%;font-size:42px}
-  th,td{border-bottom:2px solid var(--bg);padding:24px 10px;text-align:center}
+  table{border-collapse:collapse;width:100%;font-size:40px}
+  th,td{border-bottom:2px solid var(--bg);padding:18px 10px;text-align:center}
   th{color:var(--sub);font-weight:400;font-size:32px}
   td:first-child,th:first-child{text-align:left;color:var(--sub);font-size:32px}
-  .holiday{margin-top:44px;font-size:42px;padding:26px 32px;background:var(--main-soft);border-radius:12px}
+  .holiday{margin-top:30px;font-size:42px;padding:26px 32px;background:var(--main-soft);border-radius:12px}
   .holiday b{color:var(--main)}
 
-  #stage.en .rows li{font-size:42px;padding:20px 0}
+  #stage.en .rows li{font-size:30px;padding:18px 0;white-space:normal}
   #stage.en table{font-size:32px}
   #stage.en th,#stage.en td:first-child{font-size:28px}
   /* 右：呼び出し */
@@ -179,36 +184,36 @@
       ticker:'本日は混み合っています。順番が近づいた方からお呼びします。　／　お車の方は受付で駐車券をお出しください。　／　年末年始は 12月29日〜1月3日 を休診とします。　／　ご気分が悪い方は、近くのスタッフへお声がけください。',
       note:'※見本の文です。検査の準備は、院からの説明が優先です。',
       slides:[
-        {h:'本日の内視鏡検査の流れ', lead:'いま、どこまで進んでいるかの目安です。', flow:['受付','お着替え','のどの麻酔<br>鎮静','検査','回復室で<br>休憩','結果の<br>ご説明']},
-        {h:'検査の前日のお食事', lead:'検査をきれいに行うためのお願いです。', rows:[['ok','夕食は消化のよいものを、早めの時間に'],['no','当日の朝は、<b>お食事をとらないでください</b>',1],['cup','お水・お茶は飲めます'],['pill','お薬は、事前にお伝えしたとおりに']]},
-        {h:'鎮静剤を使った日は', lead:'眠くなるお薬のため、ご本人の安全のためのお願いです。', rows:[['car','車・バイク・自転車の<b>運転はできません</b>',1],['bus','ご家族の送り迎えか、バス・タクシーで'],['pen','大切な判断やご契約は、翌日以降に']]},
-        {h:'次回のご予約', lead:'次に来ていただく日は、院からお伝えします。', rows:[['cal','次回のお日にちは、受付でお決めします'],['qr','QRコードつきの予約票をお渡しします'],['phone','スマホで予約日を確かめられます']]},
-        {h:'今週の外来担当', table:{head:['','月','火','水','木','金','土'],rows:[['午前','院長','副院長','院長','副院長','院長','交代'],['午後','副院長','院長','休診','院長','副院長','休診']]}, holiday:'年末年始の休診　<b>12月29日（火）〜 1月3日（日）</b>'},
-        {h:'待合室でのお願い', lead:'みなさまが気持ちよく過ごせるように。', rows:[['phone','お電話は、待合室の外でお願いします'],['help','ご気分が悪くなったら、すぐスタッフへ'],['wifi','無料Wi-Fi　Clinic-Guest（見本）']]}
+        {img:'flow', h:'本日の内視鏡検査の流れ', lead:'いま、どこまで進んでいるかの目安です。', flow:['受付','お着替え','のどの麻酔<br>鎮静','検査','回復室で<br>休憩','結果の<br>ご説明']},
+        {img:'meal', h:'検査の前日のお食事', lead:'検査をきれいに行うためのお願いです。', rows:[['ok','夕食は 消化のよいものを早めに'],['no','当日の朝は <b>食事をとらない</b>',1],['cup','お水・お茶は 飲めます'],['pill','お薬は 事前の指示どおりに']]},
+        {img:'ride', h:'鎮静剤を使った日は', lead:'眠くなるお薬です。安全のためのお願いです。', rows:[['car','車・自転車の<b>運転はできません</b>',1],['bus','家族の送迎か バス・タクシーで'],['pen','大事な判断・契約は 翌日以降に']]},
+        {img:'reserve', h:'次回のご予約', lead:'次に来ていただく日は、院からお伝えします。', rows:[['cal','次回の日は 受付でお決めします'],['qr','QRつきの予約票をお渡しします'],['phone','スマホで予約日を確かめられます']]},
+        {img:'doctors', h:'今週の外来担当', lead:'担当は変わることがあります。', table:{head:['','月','火','水','木','金','土'],rows:[['午前','院長','副院長','院長','副院長','院長','交代'],['午後','副院長','院長','休診','院長','副院長','休診']]}, holiday:'年末年始の休診　<b>12月29日（火）〜 1月3日（日）</b>'},
+        {img:'waiting', h:'待合室でのお願い', lead:'みなさまが気持ちよく過ごせるように。', rows:[['phone','お電話は 待合室の外で'],['help','気分が悪いときは すぐスタッフへ'],['wifi','無料Wi-Fi　Clinic-Guest（見本）']]}
       ]},
     zh:{ roomExam:'診間', roomEndo:'內視鏡室', go:'叫到號碼的患者請進入', next:n=>`下一位 ${n} 號`, news:'公告',
       wait:'預估等候時間<div class="w">看診<b>約20分鐘</b></div><div class="w">內視鏡<b>約35分鐘</b></div>',
       ticker:'今日人潮較多，將依序叫號。　／　開車前來的患者，請於櫃檯出示停車券。　／　12月29日至1月3日年終休診。　／　身體不適時，請告知附近的工作人員。',
       note:'※此為範例文字。檢查前的準備，請以本院說明為準。',
       slides:[
-        {h:'今日內視鏡檢查流程', lead:'目前進行到哪一步的參考。', flow:['報到','更衣','喉嚨麻醉<br>鎮靜','檢查','恢復室<br>休息','說明<br>結果']},
-        {h:'檢查前一天的飲食', lead:'為了順利完成檢查，請您配合。', rows:[['ok','晚餐請選擇好消化的食物，並提早用餐'],['no','檢查當天早上<b>請勿進食</b>',1],['cup','可以喝水或茶'],['pill','服藥請依照事前指示']]},
-        {h:'使用鎮靜劑的當天', lead:'鎮靜劑會使人想睡，為了您的安全請配合。', rows:[['car','<b>請勿駕駛</b>汽車、機車或騎自行車',1],['bus','請由家人接送，或搭乘公車、計程車'],['pen','重要決定或簽約請延至隔天以後']]},
-        {h:'下次預約', lead:'下次回診日期由本院通知您。', rows:[['cal','下次日期將於櫃檯為您決定'],['qr','櫃檯會交給您附QR碼的預約單'],['phone','可用手機確認預約日期']]},
-        {h:'本週門診醫師', table:{head:['','一','二','三','四','五','六'],rows:[['上午','院長','副院長','院長','副院長','院長','輪班'],['下午','副院長','院長','休診','院長','副院長','休診']]}, holiday:'年終休診　<b>12月29日（二）〜 1月3日（日）</b>'},
-        {h:'候診室須知', lead:'讓大家都能安心等候。', rows:[['phone','講電話請至候診室外'],['help','身體不適請立即告知工作人員'],['wifi','免費Wi-Fi　Clinic-Guest（範例）']]}
+        {img:'flow', h:'今日內視鏡檢查流程', lead:'目前進行到哪一步的參考。', flow:['報到','更衣','喉嚨麻醉<br>鎮靜','檢查','恢復室<br>休息','說明<br>結果']},
+        {img:'meal', h:'檢查前一天的飲食', lead:'為了順利完成檢查，請您配合。', rows:[['ok','晚餐吃好消化的食物，並提早用餐'],['no','檢查當天早上<b>請勿進食</b>',1],['cup','可以喝水或茶'],['pill','服藥請依照事前指示']]},
+        {img:'ride', h:'使用鎮靜劑的當天', lead:'鎮靜劑會使人想睡，為了您的安全請配合。', rows:[['car','<b>請勿駕駛</b>汽車、機車或騎自行車',1],['bus','請家人接送，或搭公車、計程車'],['pen','重要決定或簽約請延至隔天以後']]},
+        {img:'reserve', h:'下次預約', lead:'下次回診日期由本院通知您。', rows:[['cal','下次日期將於櫃檯為您決定'],['qr','櫃檯會交給您附QR碼的預約單'],['phone','可用手機確認預約日期']]},
+        {img:'doctors', h:'本週門診醫師', lead:'門診醫師可能會有異動。', table:{head:['','一','二','三','四','五','六'],rows:[['上午','院長','副院長','院長','副院長','院長','輪班'],['下午','副院長','院長','休診','院長','副院長','休診']]}, holiday:'年終休診　<b>12月29日（二）〜 1月3日（日）</b>'},
+        {img:'waiting', h:'候診室須知', lead:'讓大家都能安心等候。', rows:[['phone','講電話請至候診室外'],['help','身體不適請立即告知工作人員'],['wifi','免費Wi-Fi　Clinic-Guest（範例）']]}
       ]},
     en:{ roomExam:'Consultation', roomEndo:'Endoscopy', go:'Please come in', next:n=>`Next: No. ${n}`, news:'Notice',
       wait:'Estimated wait (approx.)<div class="w">Doctor<b>20 min</b></div><div class="w">Endoscopy<b>35 min</b></div>',
       ticker:'We are busy today. We will call you in order.　/　If you came by car, please show your parking ticket at reception.　/　Closed from Dec 29 to Jan 3.　/　If you feel unwell, please tell a staff member.',
       note:'* Sample text. Please follow the instructions given by the clinic.',
       slides:[
-        {h:'Your endoscopy today', lead:'A guide to where you are in the process.', flow:['Reception','Change','Throat spray<br>Sedation','Exam','Rest','Results']},
-        {h:'The day before your exam', lead:'Please help us get clear results.', rows:[['ok','A light, easy-to-digest dinner, early'],['no','<b>No food</b> on the morning of the exam',1],['cup','Water and tea are fine'],['pill','Take medicine as instructed']]},
-        {h:'If you receive sedation', lead:'The medicine makes you sleepy. For your safety:', rows:[['car','<b>Do not drive</b> a car, motorbike or bicycle',1],['bus','Get a ride home, or take a bus or taxi'],['pen','Leave important decisions until tomorrow']]},
-        {h:'Your next appointment', lead:'The clinic will set the date of your next visit.', rows:[['cal','We will set the date at reception'],['qr','You will receive a slip with a QR code'],['phone','Check the date on your phone']]},
-        {h:'Doctors this week', table:{head:['','Mon','Tue','Wed','Thu','Fri','Sat'],rows:[['AM','Director','Deputy','Director','Deputy','Director','Rotating'],['PM','Deputy','Director','Closed','Director','Deputy','Closed']]}, holiday:'Closed　<b>Dec 29 (Tue) – Jan 3 (Sun)</b>'},
-        {h:'In the waiting room', lead:'So that everyone can wait comfortably.', rows:[['phone','Please take calls outside the waiting room'],['help','Tell staff right away if you feel unwell'],['wifi','Free Wi-Fi: Clinic-Guest (sample)']]}
+        {img:'flow', h:'Your endoscopy today', lead:'A guide to where you are in the process.', flow:['Reception','Change','Throat spray<br>Sedation','Exam','Rest','Results']},
+        {img:'meal', h:'The day before your exam', lead:'Please help us get clear results.', rows:[['ok','A light, easy-to-digest dinner, early'],['no','<b>No food</b> on the morning of the exam',1],['cup','Water and tea are fine'],['pill','Take medicine as instructed']]},
+        {img:'ride', h:'If you receive sedation', lead:'The medicine makes you sleepy. For your safety:', rows:[['car','<b>Do not drive</b> a car, motorbike or bicycle',1],['bus','Get a ride home, or take a bus or taxi'],['pen','Leave important decisions until tomorrow']]},
+        {img:'reserve', h:'Your next appointment', lead:'The clinic will set the date of your next visit.', rows:[['cal','We will set the date at reception'],['qr','You will receive a slip with a QR code'],['phone','Check the date on your phone']]},
+        {img:'doctors', h:'Doctors this week', lead:'Doctors may change.', table:{head:['','Mon','Tue','Wed','Thu','Fri','Sat'],rows:[['AM','Director','Deputy','Director','Deputy','Director','Rotating'],['PM','Deputy','Director','Closed','Director','Deputy','Closed']]}, holiday:'Closed　<b>Dec 29 (Tue) – Jan 3 (Sun)</b>'},
+        {img:'waiting', h:'In the waiting room', lead:'So that everyone can wait comfortably.', rows:[['phone','Please take calls outside the waiting room'],['help','Tell staff right away if you feel unwell'],['wifi','Free Wi-Fi: Clinic-Guest (sample)']]}
       ]}
   };
 
@@ -230,13 +235,17 @@
     box.querySelectorAll('.slide').forEach(e => e.remove());
     L.slides.forEach((s, i) => {
       const d = document.createElement('div');
-      d.className = 'slide' + (i === si ? ' on' : '');
-      let h = `<h2>${s.h}</h2>` + (s.lead ? `<p class="lead">${s.lead}</p>` : '') + '<div class="body">';
+      const split = !!s.rows;
+      d.className = 'slide' + (split ? ' split' : '') + (i === si ? ' on' : '');
+      const art = s.img ? `<img class="art" src="img/${s.img}.jpg" alt="">` : '';
+      const head = `<h2>${s.h}</h2>` + (s.lead ? `<p class="lead">${s.lead}</p>` : '');
+      let h = split ? '<div class="col">' + head + '<div class="body">' : `<div class="top"><div>${head}</div>${art}</div>` + '<div class="body">';
       if (s.flow) h += '<div class="flow">' + s.flow.map((t, k) => `<div class="step${k === flowStep ? ' now' : ''}"><div class="n">${k + 1}</div><div class="t">${t}</div></div>`).join('') + '</div>';
       if (s.rows) h += '<ul class="rows">' + s.rows.map(r => row(r[0], r[1], r[2])).join('') + '</ul>';
       if (s.table) h += '<table><tr>' + s.table.head.map(x => `<th>${x}</th>`).join('') + '</tr>' + s.table.rows.map(r => '<tr>' + r.map(x => `<td>${x}</td>`).join('') + '</tr>').join('') + '</table>';
       if (s.holiday) h += `<p class="holiday">${s.holiday}</p>`;
       h += '</div>';
+      if (split) h += '</div>' + art;
       if (i < 3) h += `<p class="note">${L.note}</p>`;
       d.innerHTML = h;
       box.insertBefore(d, bar);
