@@ -322,6 +322,7 @@ const boot = () => {
     stage.classList.toggle('en', lang === 'en');
     document.querySelectorAll('[data-t]').forEach(e => e.textContent = L[e.dataset.t]);
     document.getElementById('wait').innerHTML = WAIT[lang](v.wait);
+    tick();
     let tk = L.ticker;
     if (v.holiday) tk = HOL[lang](v.holiday).tick + '　／　' + tk;
     if (v.notice) tk = v.notice.text + '　／　' + tk;
@@ -343,11 +344,12 @@ const boot = () => {
       d.className = 'slide' + (split ? ' split' : '') + (i === si ? ' on' : '');
       const art = s.img ? `<img class="art" src="${src(s.img)}" alt="">` : '';
       const head = `<h2>${s.h}</h2>` + (s.lead ? `<p class="lead">${s.lead}</p>` : '');
-      let h = split ? '<div class="col">' + head + '<div class="body">' : `<div class="top"><div>${head}</div>${art}</div>` + '<div class="body">';
+      let h = split ? '<div class="col">' + head + '<div class="body">' : `<div class="top"${art ? '' : ' style="grid-template-columns:1fr"'}><div>${head}</div>${art}</div>` + '<div class="body">';
       if (s.flow) h += '<div class="flow">' + s.flow.map((t, k) => `<div class="step${k === flowStep && !(P && P.flowNow === false) ? ' now' : ''}"><div class="n">${k + 1}</div><div class="t">${t}</div></div>`).join('') + '</div>';
       if (s.rows) h += '<ul class="rows">' + s.rows.map(r => row(r[0], r[1], r[2])).join('') + '</ul>';
       if (s.people) h += '<div class="people">' + s.people.map(p => `<div class="person">${p.img ? `<img class="ph" src="${src(p.img)}" alt="">` : `<div class="ph">${p.initial}</div>`}<div><span class="tag">${p.tag}</span></div><div class="nm">${p.name}</div><div class="rl">${p.role}</div></div>`).join('') + '</div>';
-      const tc = s.todayCol ? new Date().getDay() : -1, td = k => k === tc ? ' class="today"' : '';
+      const tc = (s.todayCol && new Date().getDay()) || -1, // 日曜（0）は色をつけない
+       td = k => k === tc ? ' class="today"' : '';
       if (s.table) h += `<table${s.dense ? ' class="dense"' : ''}><tr>` + s.table.head.map((x, k) => `<th${td(k)}>${x}</th>`).join('') + '</tr>' + s.table.rows.map(r => '<tr>' + r.map((x, k) => `<td${td(k)}>${x}</td>`).join('') + '</tr>').join('') + '</table>';
       if (s.holiday) h += `<p class="holiday">${s.holiday}</p>`;
       h += '</div>';
@@ -394,8 +396,8 @@ const boot = () => {
 
   // 時計
   function tick(){
-    const d = new Date(), w = '日月火水木金土'[d.getDay()];
-    document.getElementById('date').textContent = `${d.getMonth() + 1}月${d.getDate()}日（${w}）`;
+    const d = new Date();
+    document.getElementById('date').textContent = fmtDay(todayStr(), lang); // 日付も、いま映している言語で
     document.getElementById('time').textContent = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   }
   tick(); setInterval(tick, 10000);
