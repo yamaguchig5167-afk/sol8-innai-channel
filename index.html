@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>院内チャンネル 見本画面</title>
+<meta name="description" content="待合室の画面に、検査の流れ・呼び出し番号・お知らせを映す「院内チャンネル」の見本です。">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%233E4A86%27/%3E%3Crect x=%276%27 y=%278%27 width=%2720%27 height=%2713%27 rx=%272%27 fill=%27%23FFE08A%27/%3E%3Crect x=%2712%27 y=%2723%27 width=%278%27 height=%272%27 fill=%27%23fff%27/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -21,6 +24,8 @@
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;background:#000;overflow:hidden}
+  /* スマホで 1920px の台紙が画面の幅を押し広げないよう、body を画面に固定して切り取る */
+  body{position:fixed;inset:0}
   body{font-family:"BIZ UDPGothic","BIZ UDPゴシック","Noto Sans JP","Yu Gothic UI",sans-serif;color:var(--ink)}
   #stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform-origin:center;background:var(--bg);display:grid;grid-template-rows:112px 1fr 92px;overflow:hidden}
 
@@ -113,6 +118,10 @@
   #ctrl.show{opacity:1}
   #ctrl button{font:inherit;font-size:15px;padding:10px 14px;border-radius:8px;border:1px solid #888;background:#fff;color:var(--ink);cursor:pointer;min-height:44px}
   #ctrl button.danger{background:var(--alert);color:#fff;border-color:var(--alert)}
+  /* スマホを縦に持ったとき：横向きを案内する */
+  #rotate{display:none;position:fixed;left:0;right:0;bottom:14vh;text-align:center;color:#fff;font-size:15px;line-height:1.7;padding:0 20px;z-index:9}
+  #rotate b{display:block;font-size:17px}
+  @media (orientation:portrait) and (max-width:900px){#rotate{display:block}}
   @media (prefers-reduced-motion: reduce){.track{animation-duration:120s}.call.flash{animation:none}.slide{transition:none}}
 </style>
 </head>
@@ -146,6 +155,8 @@
   </div>
 </div>
 
+<p id="rotate"><b>スマホを横向きにすると、大きく見られます</b>待合室のテレビに映す画面の見本です</p>
+
 <div id="ctrl">
   <button id="bLang">言語を切り替え</button>
   <button id="bNext">番号を進める</button>
@@ -164,7 +175,7 @@
 
   // 画面の大きさに合わせて 1920×1080 を拡大縮小
   const stage = document.getElementById('stage');
-  const fit = () => { const s = Math.min(innerWidth / 1920, innerHeight / 1080); stage.style.transform = `translate(-50%,-50%) scale(${s})`; };
+  const fit = () => { const s = Math.min(document.body.clientWidth / 1920, document.body.clientHeight / 1080); stage.style.transform = `translate(-50%,-50%) scale(${s})`; };
   addEventListener('resize', fit); fit();
 
   const I = {
