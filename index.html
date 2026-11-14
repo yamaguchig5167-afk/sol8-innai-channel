@@ -78,6 +78,22 @@
   .holiday{margin-top:30px;font-size:42px;padding:26px 32px;background:var(--main-soft);border-radius:12px}
   .holiday b{color:var(--main)}
 
+  /* 院ごとの内容（?clinic=）：ロゴ・本日の担当医・今日の列 */
+  #logo{height:64px;margin-right:20px;vertical-align:middle;filter:brightness(0) invert(1)}
+  .clinic{vertical-align:middle}
+  .people{display:flex;gap:28px;margin-top:8px}
+  .person{width:270px;text-align:center}
+  .person .ph{width:270px;height:322px;border-radius:14px;object-fit:cover;background:var(--main-soft);display:flex;align-items:center;justify-content:center;font-size:72px;font-weight:700;color:var(--main)}
+  .person .tag{display:inline-block;margin-top:16px;font-size:26px;font-weight:700;background:var(--call);padding:2px 16px;border-radius:8px}
+  .person .nm{font-size:38px;font-weight:700;line-height:1.3;margin-top:8px;white-space:nowrap}
+  .person .rl{font-size:26px;color:var(--sub)}
+  table.dense th,table.dense td{padding:11px 10px}
+  th.today,td.today{background:var(--main-soft);font-weight:700;color:var(--main)}
+  #stage.en .person .nm{font-size:34px}
+  .slide .lead{line-height:1.3}
+  #stage.en .slide h2{font-size:54px}
+  #stage.en .step .t{font-size:28px}
+
   /* 院が管理画面から出したお知らせ（大きく表示） */
   .slide.notice{justify-content:center}
   .slide.notice .tagline{display:inline-block;align-self:flex-start;font-size:30px;font-weight:700;background:var(--call);padding:6px 20px;border-radius:8px;margin-bottom:28px}
@@ -128,7 +144,7 @@
 <body>
 <div id="stage">
   <header>
-    <div><span class="clinic" id="clinicName">◯◯胃腸科クリニック</span><span class="sample">見本画面</span></div>
+    <div><img id="logo" alt="" hidden><span class="clinic" id="clinicName">◯◯胃腸科クリニック</span><span class="sample">見本画面</span></div>
     <div class="clock"><span class="date" id="date"></span><span class="time" id="time"></span></div>
   </header>
 
@@ -166,9 +182,15 @@
 </div>
 
 <script>
-(() => {
+const boot = () => {
   const q = new URLSearchParams(location.search);
-  const name = q.get('name');
+  // 院ごとの内容（clinics/<院>/profile.js）。無ければ共通の見本を映す
+  const P = window.INNAI_PROFILE || null;
+  if (P) {
+    Object.entries(P.vars || {}).forEach(([k, v]) => document.documentElement.style.setProperty(k, v));
+    if (P.logo) { const lg = document.getElementById('logo'); lg.src = (window.INNAI_INLINE && window.INNAI_INLINE.logo) || (P.imgBase || 'img/') + P.logo; lg.hidden = false; }
+  }
+  const name = q.get('name') || (P && P.name);
   if (name) document.getElementById('clinicName').textContent = name;
   const col = q.get('color');
   if (col && /^[0-9a-fA-F]{6}$/.test(col)) document.documentElement.style.setProperty('--main', '#' + col);
@@ -237,13 +259,19 @@
   // 言語の回り方：日本語 → 繁體中文 → 日本語 → English
   const ORDER = ['ja','zh','ja','en'];
   let li = 0, lang = 'ja', si = 0, flowStep = 3;
+  // ?lang=zh&slide=3 で、言語と案内の枚目を指定して開ける（資料用の撮影・確認用）
+  if (['zh', 'en'].includes(q.get('lang'))) { li = ORDER.indexOf(q.get('lang')); lang = ORDER[li]; }
+  si = Math.max(0, (parseInt(q.get('slide'), 10) || 1) - 1);
+  if (P && P.T) Object.assign(T, P.T);
+  const IMG = (P && P.imgBase) || 'img/';
+  const src = (n, ext) => (window.INNAI_INLINE && window.INNAI_INLINE[n]) || IMG + n + '.' + (ext || 'jpg');
   const SLIDE_MS = Math.max(4, Number(q.get('sec')) || 12) * 1000; // ?sec= で1枚の表示秒数を変更
   const box = document.getElementById('slides');
   const bar = document.getElementById('bar');
 
   // ── 管理画面（admin.html）から届く内容：お知らせ・休診・待ち時間・非常時 ──
   // 見本ではこの端末のブラウザに保存し、同じ端末の画面へ即時に届ける（本番は配信サーバー経由）
-  const KEY = 'innai-channel-demo';
+  const KEY = 'innai-channel-demo' + (P ? '-' + P.id : '');
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
   const pad = n => String(n).padStart(2, '0');
   const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
@@ -281,7 +309,8 @@
   let cur = [];
   function buildSlides(L){
     const v = live();
-    const arr = L.slides.map((s, k) => Object.assign({}, s, { _k: k }, (s.holiday && v.holiday) ? { holiday: HOL[lang](v.holiday).line } : {}));
+    const base = typeof L.slides === 'function' ? L.slides({ day: new Date().getDay() }) : L.slides;
+    const arr = base.map((s, k) => Object.assign({}, s, { _k: k }, (s.holiday && v.holiday) ? { holiday: HOL[lang](v.holiday).line } : {}));
     if (v.notice && v.notice.big) arr.unshift({ notice: v.notice });
     return arr;
   }
@@ -312,16 +341,18 @@
       }
       const split = !!s.rows;
       d.className = 'slide' + (split ? ' split' : '') + (i === si ? ' on' : '');
-      const art = s.img ? `<img class="art" src="img/${s.img}.jpg" alt="">` : '';
+      const art = s.img ? `<img class="art" src="${src(s.img)}" alt="">` : '';
       const head = `<h2>${s.h}</h2>` + (s.lead ? `<p class="lead">${s.lead}</p>` : '');
       let h = split ? '<div class="col">' + head + '<div class="body">' : `<div class="top"><div>${head}</div>${art}</div>` + '<div class="body">';
-      if (s.flow) h += '<div class="flow">' + s.flow.map((t, k) => `<div class="step${k === flowStep ? ' now' : ''}"><div class="n">${k + 1}</div><div class="t">${t}</div></div>`).join('') + '</div>';
+      if (s.flow) h += '<div class="flow">' + s.flow.map((t, k) => `<div class="step${k === flowStep && !(P && P.flowNow === false) ? ' now' : ''}"><div class="n">${k + 1}</div><div class="t">${t}</div></div>`).join('') + '</div>';
       if (s.rows) h += '<ul class="rows">' + s.rows.map(r => row(r[0], r[1], r[2])).join('') + '</ul>';
-      if (s.table) h += '<table><tr>' + s.table.head.map(x => `<th>${x}</th>`).join('') + '</tr>' + s.table.rows.map(r => '<tr>' + r.map(x => `<td>${x}</td>`).join('') + '</tr>').join('') + '</table>';
+      if (s.people) h += '<div class="people">' + s.people.map(p => `<div class="person">${p.img ? `<img class="ph" src="${src(p.img)}" alt="">` : `<div class="ph">${p.initial}</div>`}<div><span class="tag">${p.tag}</span></div><div class="nm">${p.name}</div><div class="rl">${p.role}</div></div>`).join('') + '</div>';
+      const tc = s.todayCol ? new Date().getDay() : -1, td = k => k === tc ? ' class="today"' : '';
+      if (s.table) h += `<table${s.dense ? ' class="dense"' : ''}><tr>` + s.table.head.map((x, k) => `<th${td(k)}>${x}</th>`).join('') + '</tr>' + s.table.rows.map(r => '<tr>' + r.map((x, k) => `<td${td(k)}>${x}</td>`).join('') + '</tr>').join('') + '</table>';
       if (s.holiday) h += `<p class="holiday">${s.holiday}</p>`;
       h += '</div>';
       if (split) h += '</div>' + art;
-      if (s._k < 3) h += `<p class="note">${L.note}</p>`;
+      if (P ? s.note : s._k < 3) h += `<p class="note">${L.note}</p>`;
       d.innerHTML = h;
       box.insertBefore(d, bar);
     });
@@ -388,7 +419,7 @@
     if (e !== lastEmg) { if (e) { setEmg(e); emg.classList.add('on'); } else emg.classList.remove('on'); lastEmg = e; }
     if (m && (m.focus === 'notice' || m.focus === 'holiday')) {
       if (m.focus === 'notice' && live().notice && live().notice.big) si = 0;
-      else if (m.focus === 'holiday') si = T[lang].slides.findIndex(s => s.holiday) + (live().notice && live().notice.big ? 1 : 0);
+      else if (m.focus === 'holiday') { render(); si = Math.max(0, cur.findIndex(s => s.holiday)); }
       render(); show();
     } else render();
   }
@@ -411,6 +442,14 @@
   });
 
   render(); show();
+};
+// ?clinic=<院の名前> で院を指定すると、その院の内容を読み込んでから始める
+(() => {
+  const c = new URLSearchParams(location.search).get('clinic');
+  if (!c || !/^[a-z0-9-]{1,30}$/.test(c)) return boot();
+  const sc = document.createElement('script');
+  sc.src = `clinics/${c}/profile.js`; sc.onload = boot; sc.onerror = boot;
+  document.head.appendChild(sc);
 })();
 </script>
 </body>
