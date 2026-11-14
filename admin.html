@@ -174,16 +174,18 @@
 <div class="status" id="status" role="status" aria-live="polite"></div>
 
 <script>
-(() => {
-  const KEY = 'innai-channel-demo';
+const boot = () => {
+  const P = window.INNAI_PROFILE || null;
+  const KEY = 'innai-channel-demo' + (P ? '-' + P.id : '');
   const MAX = 60;
   const $ = id => document.getElementById(id);
   const q = new URLSearchParams(location.search);
-  const name = (q.get('name') || '').slice(0, 30);
+  const name = (q.get('name') || (P && P.name) || '').slice(0, 30);
+  if (P) Object.entries(P.vars || {}).forEach(([k, v]) => ['--main', '--main-soft', '--call'].includes(k) && document.documentElement.style.setProperty(k, v));
   if (name) $('clinic').textContent = name;
 
   // 画面の見本を右に映す（同じ院名で）
-  const p = new URLSearchParams(); if (name) p.set('name', name); p.set('sec', '8');
+  const p = new URLSearchParams(); if (P) p.set('clinic', P.id); if (q.get('name')) p.set('name', name); p.set('sec', '8');
   const col = q.get('color'); if (col && /^[0-9a-fA-F]{6}$/.test(col)) { p.set('color', col); document.documentElement.style.setProperty('--main', '#' + col); }
   $('screen').src = 'index.html?' + p; $('openScreen').href = 'index.html?' + p;
 
@@ -277,6 +279,13 @@
   }
   addEventListener('storage', e => { if (e.key === KEY) paint(); });
   paint();
+};
+(() => {
+  const c = new URLSearchParams(location.search).get('clinic');
+  if (!c || !/^[a-z0-9-]{1,30}$/.test(c)) return boot();
+  const sc = document.createElement('script');
+  sc.src = `clinics/${c}/profile.js`; sc.onload = boot; sc.onerror = boot;
+  document.head.appendChild(sc);
 })();
 </script>
 </body>
