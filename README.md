@@ -4,8 +4,8 @@
 
 | 見本 | 開く |
 |---|---|
-| 待合室の画面 | https://yamaguchig5167-afk.github.io/sol8-innai-channel/ |
-| 管理画面（受付スタッフ用） | https://yamaguchig5167-afk.github.io/sol8-innai-channel/admin.html |
+| 待合室の画面 | https://sol8-innai-channel.vercel.app/ |
+| 管理画面（受付スタッフ用） | https://sol8-innai-channel.vercel.app/admin.html |
 
 ## 画面に出るもの
 
